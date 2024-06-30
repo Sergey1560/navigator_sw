@@ -11,6 +11,7 @@ Lib/Mylib/rcc.c \
 Lib/Mylib/usart.c \
 Lib/Mylib/syscalls.c \
 Src/timer.c \
+Src/exti.c \
 Src/main.c
 
 

@@ -16,12 +16,7 @@ void uart_init(USART_TypeDef* usart, uint32_t baudrate);
 void uart_stop(USART_TypeDef* usart);
 void usart1_gpio_init(void);
 void usart2_gpio_init(void);
-void usart3_gpio_init(void);
-void uart4_gpio_init(void);
 
-
-void uart2_send_dma(uint8_t *data, uint16_t len);
-void uart3_send_dma(uint8_t *data, uint16_t len);
 
 
 #endif
