@@ -1,11 +1,15 @@
 #ifndef LOG_H
 #define LOG_H
+#include "common_defs.h"
+
+#ifdef DEBUG_ENABLED
 #include "SEGGER_RTT.h"
 
 #define DEBUG_MSG
 #define INFO_MSG
 #define WARNING_MSG
 #define ERROR_MSG
+#endif
 
 #ifdef COLOR_LOG_RTT
     #define DEBUG(fmt, args...) SEGGER_RTT_printf(0,"%s%s %-20s:%-4d: " fmt "%s\r\n", RTT_CTRL_TEXT_WHITE, GetUpTimeASCII(), __func__, __LINE__, ## args, RTT_CTRL_RESET)

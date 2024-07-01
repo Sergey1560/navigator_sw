@@ -1,7 +1,7 @@
 {
     "configurations": [
         {
-            "name": "STM32F072",
+            "name": "STM32G030xx",
             "compilerPath": "/usr/bin/arm-none-eabi-gcc",
             "includePath": [
                 "${workspaceFolder}/Lib/**",

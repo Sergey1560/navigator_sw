@@ -21,15 +21,6 @@
                     "$gcc"
                 ]
             },
-            {
-                "label": "Flash ST",
-                "type": "shell",
-                "group": "build",
-                "command": "~/soft/STMicroelectronics/STM32CubeProgrammer/bin/STM32_Programmer_CLI -c port=SWD -d build/cansender.elf -hardRst",
-                "problemMatcher": [
-                    "$gcc"
-                ]
-        },
         {
             "label": "Ozone",
             "type": "shell",
@@ -43,7 +34,7 @@
         "label": "Flash J-link",
         "type": "shell",
         "group": "build",
-        "command": "JLinkExe -device \"STM32G030J6\" -if SWD -speed 4000 -autoconnect 1 -CommanderScript ./jlink.cmd",
+        "command": "JLinkExe -device \"STM32G030F6\" -if SWD -speed 4000 -autoconnect 1 -CommanderScript ./jlink.cmd",
         "problemMatcher": [
             "$gcc"
         ]
