@@ -1,7 +1,7 @@
 #include "usart.h"
 
 void uart_send_char(USART_TypeDef* usart, char c){
-	while(!(usart->ISR & USART_ISR_TXE_TXFNF)) {};  //пока бит TXE не стал 1, буфер занят
+	while(!(usart->ISR & USART_ISR_TXE_TXFNF)) {};
 	usart->TDR  =  c;
 };
 
