@@ -1,76 +1,73 @@
 #include "main.h"
 #include "usart.h"
-//#include <stdio.h>
-#include "exti.h"
+#include "tim.h"
+#include "odo.h"
 
-volatile uint16_t uart_cmd;
-
-static void convert2hex(uint16_t x, char *res);
-static void send_counter(void);
+volatile uint32_t resume_flag=0;
+volatile uint32_t uart_cmd=0;
 
 #ifdef DEBUG_ENABLED
 volatile uint32_t sys_timer;
 static void systick_init(void);
 #endif
 
+
 int main(void){
+	
 	RCC_init();
+	Delay_Init();
+
+	//check pin state for SWD connection
+	if( check_start_pin() ){ 
+		while (resume_flag < 1){
+			//wait debugger to set flag 1
+		}
+	}
+
+	#ifdef DISABLE_NRST
+	remove_nrst();
+	#endif
+
+	tim14_init();
 
 	#ifdef DEBUG_ENABLED
 	systick_init();
-	tim14_init();   
 	#endif
 
-	uart_init(USART1,9600);
-	uart_enable_irq(USART1);
-	
-	send_counter();
+	#ifdef DISABLE_NRST
+	usart2_tx_init();
+	#endif
 
-	exti_init();
+	usart1_rx_init();
 
 	while(1){
-		
-		if(uart_cmd == 0x53){ //S
-			send_counter();
-			uart_cmd = 0;
-			reset_counter();
-		}
+		if(uart_cmd != 0){
+			if(uart_cmd == 0x53){ //S
+				send_counter();
+				reset_counter();
+			}
 
-		if(uart_cmd == 0x52){ //R
-			send_counter();
+			if(uart_cmd == 0x52){ //R
+				send_counter();
+				
+			}
 			uart_cmd = 0;
+			}
 		}
-		};
 }
-
-
-static void send_counter(void){
-	uint8_t	buf[7];
-
-	//sprintf((char *)buf,"%04X",get_counter());
-	convert2hex(get_counter(),(char *)buf);
-	buf[4] = 0x0D;
-	buf[5] = 0x0A;
-	uart_send_bin(USART1,buf,6);
-	
-	#ifdef DEBUG_ENABLED
-	DEBUG("Reply [%d]: 0x%0X:0x%0X:0x%0X:0x%0X:0x%0X:0x%0X",get_counter(),buf[0],buf[1],buf[2],buf[3],buf[4],buf[5]);
-	buf[4] = 0;
-	DEBUG("String: %s",buf);
-	#endif
-};
 
 
 void USART1_IRQHandler(void){
 	uint8_t data;
-	
+
 	#ifdef DEBUG_ENABLED
 	static uint32_t last_time = 0;
 	#endif
 
+
 	if(USART1->ISR & USART_ISR_RXNE_RXFNE){
 		data = USART1->RDR;
-		
+
 		#ifdef DEBUG_ENABLED
 		DEBUG("[%d]Get char %c (0x%0X)",sys_timer-last_time,(char)data,data);
 		last_time = sys_timer;
@@ -81,6 +78,70 @@ void USART1_IRQHandler(void){
 		}
 	}
 }
+
+
+
+uint8_t check_start_pin(void){
+	//PA12
+
+	#ifdef DEBUG_ENABLED
+	DEBUG("Startup pause");
+	Delay_ms(1000);
+	DEBUG("Startup pause done");
+	#endif
+	
+	SYSCFG->CFGR1 &= ~SYSCFG_CFGR1_PA12_RMP;  //No PA12 remap
+   	RCC->IOPENR |= RCC_IOPENR_GPIOAEN;
+	GPIOA->MODER &= ~GPIO_MODER_MODE12;
+	GPIOA->PUPDR &= ~GPIO_PUPDR_PUPD12;
+
+	if(GPIOA->IDR & GPIO_ODR_OD12){ //Pin up, stop for debug
+		DEBUG("Debug mode");
+		return 1;
+	}
+	
+	DEBUG("Normal startup");
+	return 0;
+}
+
+
+/*
+Remap NSRT pin to GPIO
+*/
+#ifdef DISABLE_NRST
+void remove_nrst(void){
+	uint32_t opt_byte = FLASH->OPTR;
+	
+	if( ((opt_byte >> NRST_MODE_Pos) & NRST_MODE_MASK) != NRST_MODE_GPIO_MASK ){
+
+		//Unlock Flash
+		FLASH->KEYR = 0x45670123;
+		FLASH->KEYR = 0xCDEF89AB;
+
+		//Unlock optbyte
+		FLASH->OPTKEYR = 0x08192A3B;
+		FLASH->OPTKEYR = 0x4C5D6E7F;
+
+		//Wait flash busy
+		while(FLASH->SR & FLASH_SR_BSY1){};
+		
+		//opt_byte = FLASH->OPTR;
+		opt_byte &= ~(NRST_MODE_MASK << NRST_MODE_Pos);
+		opt_byte |= (NRST_MODE_GPIO_MASK << NRST_MODE_Pos);
+		FLASH->OPTR = opt_byte;
+
+		//Wait flash busy
+		while(FLASH->SR & FLASH_SR_BSY1){};
+
+		FLASH->CR |= FLASH_CR_OPTSTRT;
+
+		//Wait flash busy
+		while(FLASH->SR & FLASH_SR_BSY1){};
+	}
+}
+#endif
+
+
 
 #ifdef DEBUG_ENABLED
 void systick_init(void){
@@ -97,12 +158,3 @@ void SysTick_Handler(void){
 	sys_timer++;
 }
 #endif
-
-
-
-static void convert2hex(uint16_t x, char *res){
-	res[0] = TO_HEX(((x & 0xF000) >> 12));   
-	res[1] = TO_HEX(((x & 0x0F00) >> 8));
-	res[2] = TO_HEX(((x & 0x00F0) >> 4));
-	res[3] = TO_HEX((x & 0x000F));
-}

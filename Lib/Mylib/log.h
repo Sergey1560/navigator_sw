@@ -1,5 +1,6 @@
 #ifndef LOG_H
 #define LOG_H
+
 #include "common_defs.h"
 
 #ifdef DEBUG_ENABLED

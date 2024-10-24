@@ -8,10 +8,11 @@ BUILD_DIR = build
 C_SOURCES =  \
 Lib/CMSIS/src/system_stm32g0xx.c \
 Lib/Mylib/rcc.c \
+Lib/Mylib/delay.c \
 Lib/Mylib/usart.c \
 Lib/Mylib/syscalls.c \
-Src/timer.c \
-Src/exti.c \
+Src/tim.c \
+Src/odo.c \
 Src/main.c
 
 
@@ -65,6 +66,7 @@ AS_INCLUDES =
 C_INCLUDES =  \
 -ILib/CMSIS/inc \
 -ILib/Mylib \
+-ILib/fonts \
 -ISrc
 
 
@@ -86,7 +88,7 @@ CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 # LDFLAGS
 #######################################
 # link script
-LDSCRIPT = Startup/STM32G030F6Px_FLASH.ld
+LDSCRIPT = Startup/STM32G030J6Mx_FLASH.ld
 
 # libraries
 LIBS = -lc -lm -lnosys 

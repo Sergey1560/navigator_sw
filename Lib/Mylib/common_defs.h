@@ -1,12 +1,13 @@
 #include "stm32g0xx.h"
+#include "delay.h"
 #include "log.h"
-
-//#define DEBUG_ENABLED
 
 #define ALGN4 __attribute__ ((aligned (4)))
 #define ALGN8 __attribute__ ((aligned (8)))
 #define ALGN32 __attribute__ ((aligned (32)))
 
+#define DISABLE_NRST
+//#define DEBUG_ENABLED
 
 /* GPIO SPEED */
 #define S_LOW 0
